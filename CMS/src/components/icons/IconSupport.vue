@@ -1,7 +1,3 @@
 <template>
-  <svg width="20" height="20" fill="currentColor">
-    <path
-      d=""
-    />
-  </svg>
+  <img src="../../assets/Logo.svg" width="150" height="150" />
 </template>
