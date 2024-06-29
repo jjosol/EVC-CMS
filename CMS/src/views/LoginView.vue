@@ -1,4 +1,5 @@
 <script setup>
+// import { RouterLink } from 'vue-router';
 import Header from '../components/Header.vue'
 import Title from '../components/Title.vue'
 import LoginButton from '../components/LoginButton.vue'
@@ -8,6 +9,6 @@ import LoginButton from '../components/LoginButton.vue'
   <main class="font-['DM_Serif_Display']">
     <Header/>
     <Title/>
-    <RouterLink to="/home"><LoginButton/></RouterLink>
+    <RouterLink :to="{name:'loginform'}"><LoginButton/></RouterLink>
   </main>
 </template>
