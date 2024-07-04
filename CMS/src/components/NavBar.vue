@@ -28,6 +28,16 @@ const isActive = (path) => computed(() => route.path === path).value;
           </router-link>
         </li>
       </ul>
+      <div class="flex items-center">
+      <input
+        type="text"
+        placeholder="Search..."
+        class="border border-[#2F4A71] rounded-full px-4 py-2 text-black focus:outline-none"
+      />
+      <button class="ml-5 text-[#2F4A71] focus:outline-none">
+        <i class="text-2xl fa-solid fa-magnifying-glass" ></i>
+      </button>
+    </div>
     </div>
   </nav>
 </template>

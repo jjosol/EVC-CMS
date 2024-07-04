@@ -11,6 +11,7 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "moment-timezone": "^0.5.45",
     "vue": "^3.4.29",
     "vue-router": "^4.3.3"
   },
