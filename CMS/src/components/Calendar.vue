@@ -10,7 +10,7 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 const calendar = ref([]);
-
+//creates calendar
 const updateCalendar = () => {
   const firstDayOfMonth = moment.tz({ year: selectedYear.value, month: selectedMonth.value, day: 1 }, "Asia/Manila");
   const lastDayOfMonth = firstDayOfMonth.clone().endOf('month');
@@ -18,30 +18,33 @@ const updateCalendar = () => {
   const daysInMonth = lastDayOfMonth.date();
 
   let daysArray = [];
+  //put blank dates before the first day
   for (let i = 0; i < firstDayOfWeek; i++) {
     daysArray.push({ date: null });
   }
+ //put the dates 
   for (let i = 1; i <= daysInMonth; i++) {
     daysArray.push({ date: moment.tz({ year: selectedYear.value, month: selectedMonth.value, day: i }, "Asia/Manila").toDate(), notes: "" });
   }
+   //put blank dates after the last day
   while (daysArray.length % 7 !== 0) {
     daysArray.push({ date: null });
   }
-
+  //put the dates from daysArray in by 7 
   calendar.value = [];
   for (let i = 0; i < daysArray.length; i += 7) {
     calendar.value.push(daysArray.slice(i, i + 7));
   }
 };
 
+//for connecting the list and calendar
 const emit = defineEmits(['day-selected']);
-
 const openAddingList = (day) => {
   if (day.date) {
     emit('day-selected', day);
   }
 };
-
+//checks if selected date is today 
 const isToday = (date) => {
   if (!date) return false;
   const today = moment.tz("Asia/Manila");
@@ -51,6 +54,7 @@ const isToday = (date) => {
   );
 };
 
+//to make sure that everything is rendered first before creating the calendar
 onMounted(() => {
   updateCalendar();
 });
@@ -88,8 +92,8 @@ onMounted(() => {
         <tr v-for="week in calendar" :key="week[0].date">
           <td v-for="day in week" :key="day.date" class="relative p-4 border border-gray-300">
             <div @click="openAddingList(day)" class="cursor-pointer">
-              <span :class="{'bg-pink-600': isToday(day.date)}">{{ day.date ? day.date.getDate() : '' }}</span>
-              <div v-if="day.notes" class="marquee">{{ day.notes }}</div>
+              <span :class="{'bg-pink-600': isToday(day.date)}">{{ day.date ? day.date.getDate() : '' }}</span> <!--responsible for showing the date-->
+              <!-- <div v-if="day.notes" class="marquee">{{ day.notes }}</div> -->
             </div>
           </td>
         </tr>
@@ -99,26 +103,26 @@ onMounted(() => {
 </template>
 
 <style scoped>
-textarea {
-  resize: none;
-}
-.marquee {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
+  textarea {
+    resize: none;
+  }
+  .marquee {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
 
-  height: 1.5em; /* Set a fixed height */
-}
-.marquee:hover {
-  animation: scroll-left 10s linear infinite;
-}
-@keyframes scroll-left {
-  from {
-    transform: translateX(100%);
+    height: 1.5em; /* Set a fixed height */
   }
-  to {
-    transform: translateX(-100%);
+  .marquee:hover {
+    animation: scroll-left 10s linear infinite;
   }
-}
+  @keyframes scroll-left {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
 </style>
