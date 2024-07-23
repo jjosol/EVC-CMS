@@ -15,7 +15,7 @@
   <template>
   <NavBar/>
     <div class="flex items-center justify-center min-h-screen">
-      <div class="flex w-full max-w-5xl">
+      <div class="flex w-full max-w-6xl">
         <Calendar @day-selected="handleDaySelected" /> 
         <AddList :current-day="currentDay" />
       </div>

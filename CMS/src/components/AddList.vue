@@ -9,36 +9,45 @@ const props = defineProps({
   }
 });
 
+// Modal show or not
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const showMedicineModal = ref(false);
-const selectedPerson = ref();
-const selectedDate = computed(() => props.currentDay.date.toDateString());
+const showMedicineDetailModal = ref(false);
+
+// Selected person and date/time
+const selectedPerson = ref(null);
+//sets the date to be full and not abbreviation
+const selectedDate = computed(() => {
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  return new Intl.DateTimeFormat('en-US', options).format(props.currentDay.date);
+});
 const selectedTime = ref('');
+
+// Search queries
 const searchQuery = ref('');
 const medicineSearchQuery = ref('');
 
+// To contain all that is part of the list
 const people = ref([]);
 
+// Initialize values for people list
 const allPeople = ref([
   { name: 'John Doe', section: 'A', age: 30, sex: 'male' },
-  { name: 'Jane Smith', section: 'B', age: 25, sex: 'male' },
-  { name: 'Alice Johnson', section: 'C', age: 28, sex: 'male' },
+  { name: 'Jane Smith', section: 'B', age: 25, sex: 'female' },
+  { name: 'Alice Johnson', section: 'C', age: 28, sex: 'female' },
   { name: 'Bob Brown', section: 'D', age: 32, sex: 'male' },
 ]);
 
-watch(() => props.currentDay, (newVal) => {
-  if (newVal && newVal.date) {
-    if (newVal.date.toDateString() === new Date().toDateString()) {
-      people.value = [];
-    } else {
-      people.value = [];
-    }
-  } else {
-    people.value = [];
-  }
-});
+// Initialize values for meds list
+const allMedicines = ref([
+  { name: 'Paracetamol', dosages: [250, 500] },
+  { name: 'Ibuprofen', dosages: [200, 400, 600] },
+  { name: 'Aspirin', dosages: [75, 150, 300] },
+  { name: 'Amoxicillin', dosages: [250, 500, 1000] },
+]);
 
+// Search person
 const filteredPeople = computed(() => {
   if (!searchQuery.value) {
     return allPeople.value;
@@ -46,13 +55,7 @@ const filteredPeople = computed(() => {
   return allPeople.value.filter(person => person.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 
-const allMedicines = ref([
-  { name: 'Paracetamol' },
-  { name: 'Ibuprofen' },
-  { name: 'Aspirin' },
-  { name: 'Amoxicillin' },
-]);
-
+// Search meds
 const filteredMedicines = computed(() => {
   if (!medicineSearchQuery.value) {
     return allMedicines.value;
@@ -60,25 +63,36 @@ const filteredMedicines = computed(() => {
   return allMedicines.value.filter(medicine => medicine.name.toLowerCase().includes(medicineSearchQuery.value.toLowerCase()));
 });
 
-const addPerson = (person) => {
-  const now = new Date();
-  if (person.name && person.section) {
-    people.value.push({ ...person, addedAt: now, medicines: [] });
-    showAddModal.value = false;
-    openEditModal({ ...person, addedAt: now, medicines: [] });
+// To reset but if theres a db it should be changed
+watch(() => props.currentDay, (newVal) => {
+  if (newVal && newVal.date) {
+    people.value = []; 
+    //function to change people based on which day if we have db
   }
-};
+});
 
-const deletePerson = (index) => {
-  people.value.splice(index, 1);
-};
-
+// About people modal
 const openEditModal = (person) => {
   selectedPerson.value = { ...person };
   selectedTime.value = formatAMPM(new Date());
   showEditModal.value = true;
 };
 
+// Add person
+const addPerson = (person) => {
+  const now = new Date();
+  if (person.name && person.section) {
+    selectedPerson.value = { ...person, addedAt: now, medicines: [] };
+    showEditModal.value = true;
+  }
+};
+
+// Delete person
+const deletePerson = (index) => {
+  people.value.splice(index, 1);
+};
+
+// Time when added (am/pm)
 const formatAMPM = (date) => {
   let hours = date.getHours();
   let minutes = date.getMinutes();
@@ -90,36 +104,96 @@ const formatAMPM = (date) => {
   return strTime;
 };
 
+// Save person
 const savePerson = () => {
   const index = people.value.findIndex(p => p.name === selectedPerson.value.name);
   if (index !== -1) {
     people.value[index] = { ...selectedPerson.value };
-    showEditModal.value = false;
+  } else {
+    people.value.push({ ...selectedPerson.value });
   }
+  showEditModal.value = false;
+  showAddModal.value = false;
 };
 
+// Cancel edit
+const cancelEdit = () => {
+  showEditModal.value = false;
+};
+
+// Medicine modal
 const openMedicineModal = () => {
   showMedicineModal.value = true;
 };
 
+// Add medicine
 const addMedicine = (medicine) => {
-  if (!selectedPerson.value.medicines) {
-    selectedPerson.value.medicines = [];
-  }
-  selectedPerson.value.medicines.push(medicine);
+  selectedMedicine.value = { ...medicine, dosage: null, quantity: 1, schedule: '', startDate: '', endDate: '' };
+  showMedicineDetailModal.value = true;
   showMedicineModal.value = false;
 };
 
+// Edit medicine
+const editMedicine = (medicine, index) => {
+  selectedMedicine.value = { ...medicine, index };
+  showMedicineDetailModal.value = true;
+};
+
+// Save medicine details
+const saveMedicineDetails = () => {
+  if (selectedMedicine.value.index !== undefined) {
+    selectedPerson.value.medicines[selectedMedicine.value.index] = { ...selectedMedicine.value };
+    delete selectedMedicine.value.index;
+  } else {
+    if (!selectedPerson.value.medicines) {
+      selectedPerson.value.medicines = [];
+    }
+    selectedPerson.value.medicines.push({ ...selectedMedicine.value });
+  }
+  showMedicineDetailModal.value = false;
+};
+
+// Remove medicine
 const removeMedicine = (index) => {
   selectedPerson.value.medicines.splice(index, 1);
 };
+
+// Cancel medicine
+const cancelMedicine = () => {
+  showMedicineModal.value = false;
+};
+
+// Cancel medicine details
+const cancelMedicineDetails = () => {
+  showMedicineDetailModal.value = false;
+};
+
+// Selected medicine for detail modal
+const selectedMedicine = ref({
+  name: '',
+  dosage: null,
+  quantity: 1,
+  schedule: '',
+  startDate: '',
+  endDate: ''
+});
+
+// To make sure that if meds is false all meds in list would be removed
+watch(
+  () => selectedPerson.value?.medicationAdministration,
+  (newValue) => {
+    if (selectedPerson.value && !newValue) {
+      selectedPerson.value.medicines = [];
+    }
+  }
+);
 </script>
 
 <template>
-  <div class="w-1/3 ml-9">
+  <div class="w-2/6 ml-9">
     <div class="p-4 border rounded-lg">
-      <h2 class="mb-4 text-2xl font-bold">Selected Date: {{ props.currentDay && props.currentDay.date ? props.currentDay.date.toDateString() : 'None' }}</h2>
-      <p class="text-lg">CONFINEMENTS</p>
+      <h2 class="mb-4 text-2xl font-bold">{{selectedDate}}</h2>
+      <p class="text-2xl">CONFINEMENTS:</p>
       <ul class="mt-4 overflow-y-auto max-h-60">
         <li v-for="(person, index) in people" :key="index" class="flex items-center justify-between mb-2 text-lg confinement-item">
           <span @click="openEditModal(person)" class="cursor-pointer confinement-details">{{ person.name }} - {{ person.section }} - {{ formatAMPM(person.addedAt) }}</span>
@@ -171,7 +245,7 @@ const removeMedicine = (index) => {
           </div>
           <ul class="mt-4">
             <li v-for="(medicine, index) in selectedPerson.medicines" :key="index" class="flex items-center justify-between mb-2">
-              {{ medicine.name }}
+              <span @click="editMedicine(medicine, index)" class="cursor-pointer">{{ medicine.name }} - {{ medicine.dosage }} mg - {{ medicine.quantity }} pcs - {{ medicine.schedule }}</span>
               <button @click="removeMedicine(index)" class="p-2 text-white bg-red-500 rounded">Remove</button>
             </li>
           </ul>
@@ -179,7 +253,7 @@ const removeMedicine = (index) => {
         </div>
         <div class="flex justify-end mt-4">
           <button @click="savePerson" class="p-2 text-white bg-green-500 rounded">Save</button>
-          <button @click="showEditModal = false" class="p-2 ml-2 text-white bg-gray-500 rounded">Cancel</button>
+          <button @click="cancelEdit" class="p-2 ml-2 text-white bg-gray-500 rounded">Cancel</button>
         </div>
       </div>
     </div>
@@ -196,7 +270,41 @@ const removeMedicine = (index) => {
           </li>
         </ul>
         <div class="flex justify-end mt-4">
-          <button @click="showMedicineModal = false" class="p-2 ml-2 text-white bg-gray-500 rounded">Cancel</button>
+          <button @click="cancelMedicine" class="p-2 ml-2 text-white bg-gray-500 rounded">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medicine Detail Modal -->
+    <div v-if="showMedicineDetailModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+      <div class="w-1/3 p-4 bg-white rounded-lg">
+        <h2 class="mb-2 text-xl">Medicine Details</h2>
+        <p><strong>Medicine:</strong> {{ selectedMedicine.name }}</p>
+        <div class="mb-2">
+          <label for="dosage" class="block mb-1">Dosage (mg):</label>
+          <select id="dosage" v-model="selectedMedicine.dosage" class="w-full p-2 mb-2 border rounded">
+            <option v-for="dosage in selectedMedicine.dosages" :key="dosage" :value="dosage">{{ dosage }}</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label for="quantity" class="block mb-1">Quantity:</label>
+          <input type="number" id="quantity" v-model="selectedMedicine.quantity" min="1" class="w-16 p-2 mx-2 text-center border rounded">
+        </div>
+        <div class="mb-2">
+          <label for="schedule" class="block mb-1">Schedule:</label>
+          <textarea id="schedule" v-model="selectedMedicine.schedule" placeholder="e.g., Every 4 hours, 3 times a day" class="w-full p-2 mb-2 border rounded"></textarea>
+        </div>
+        <div class="mb-2">
+          <label for="startDate" class="block mb-1">Start Date:</label>
+          <input type="date" id="startDate" v-model="selectedMedicine.startDate" class="w-full p-2 mb-2 border rounded">
+        </div>
+        <div class="mb-2">
+          <label for="endDate" class="block mb-1">End Date:</label>
+          <input type="date" id="endDate" v-model="selectedMedicine.endDate" class="w-full p-2 mb-2 border rounded">
+        </div>
+        <div class="flex justify-end mt-4">
+          <button @click="saveMedicineDetails" class="p-2 text-white bg-green-500 rounded">Save</button>
+          <button @click="cancelMedicineDetails" class="p-2 ml-2 text-white bg-gray-500 rounded">Cancel</button>
         </div>
       </div>
     </div>
@@ -204,37 +312,37 @@ const removeMedicine = (index) => {
 </template>
 
 <style scoped>
-  textarea {
-    resize: none;
+textarea {
+  resize: none;
+}
+.marquee {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  height: 1.5em;
+}
+.marquee:hover {
+  animation: scroll-left 10s linear infinite;
+}
+@keyframes scroll-left {
+  from {
+    transform: translateX(100%);
   }
-  .marquee {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-    height: 1.5em;
+  to {
+    transform: translateX(-100%);
   }
-  .marquee:hover {
-    animation: scroll-left 10s linear infinite;
-  }
-  @keyframes scroll-left {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(-100%);
-    }
-  }
-  .confinement-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .confinement-details {
-    flex-grow: 1;
-    margin-right: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+}
+.confinement-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.confinement-details {
+  flex-grow: 1;
+  margin-right: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>

@@ -4,13 +4,15 @@ import moment from 'moment-timezone';
 
 const selectedYear = ref(moment().tz("Asia/Manila").year());
 const selectedMonth = ref(moment().tz("Asia/Manila").month());
+const selectedDate = ref(null); // New reactive property for selected date
 const years = Array.from({ length: 50 }, (_, i) => moment().tz("Asia/Manila").year() - 25 + i);
 const months = [
   "January", "February", "March", "April", "May", "June", 
   "July", "August", "September", "October", "November", "December"
 ];
 const calendar = ref([]);
-//creates calendar
+
+// Creates calendar
 const updateCalendar = () => {
   const firstDayOfMonth = moment.tz({ year: selectedYear.value, month: selectedMonth.value, day: 1 }, "Asia/Manila");
   const lastDayOfMonth = firstDayOfMonth.clone().endOf('month');
@@ -18,33 +20,35 @@ const updateCalendar = () => {
   const daysInMonth = lastDayOfMonth.date();
 
   let daysArray = [];
-  //put blank dates before the first day
+  // Put blank dates before the first day
   for (let i = 0; i < firstDayOfWeek; i++) {
     daysArray.push({ date: null });
   }
- //put the dates 
+  // Put the dates 
   for (let i = 1; i <= daysInMonth; i++) {
     daysArray.push({ date: moment.tz({ year: selectedYear.value, month: selectedMonth.value, day: i }, "Asia/Manila").toDate(), notes: "" });
   }
-   //put blank dates after the last day
+  // Put blank dates after the last day
   while (daysArray.length % 7 !== 0) {
     daysArray.push({ date: null });
   }
-  //put the dates from daysArray in by 7 
+  // Put the dates from daysArray in by 7 
   calendar.value = [];
   for (let i = 0; i < daysArray.length; i += 7) {
     calendar.value.push(daysArray.slice(i, i + 7));
   }
 };
 
-//for connecting the list and calendar
+// For connecting the list and calendar
 const emit = defineEmits(['day-selected']);
 const openAddingList = (day) => {
   if (day.date) {
+    selectedDate.value = day.date; // Update the selected date
     emit('day-selected', day);
   }
 };
-//checks if selected date is today 
+
+// Checks if selected date is today 
 const isToday = (date) => {
   if (!date) return false;
   const today = moment.tz("Asia/Manila");
@@ -54,29 +58,42 @@ const isToday = (date) => {
   );
 };
 
-//to make sure that everything is rendered first before creating the calendar
+// Checks if a date is the selected date
+const isSelected = (date) => {
+  if (!date || !selectedDate.value) return false;
+  const selected = moment(selectedDate.value).tz("Asia/Manila");
+  const dayDate = moment(date).tz("Asia/Manila");
+  return (
+    dayDate.date() === selected.date() && dayDate.month() === selected.month() && dayDate.year() === selected.year()
+  );
+};
+
+// To make sure that everything is rendered first before creating the calendar
 onMounted(() => {
   updateCalendar();
 });
 </script>
-
+Updated Template:
+Add a conditional class to apply the selected color.
+vue
+Copy code
 <template>
-  <div class="w-2/3 max-w-4xl p-8 border rounded-lg">
-    <div class="flex items-center justify-center mb-8">
-      <div class="flex space-x-4">
-        <label for="month" class="mr-4 text-lg">Month:</label>
+  <div class="w-4/6 max-w-4xl p-8 border rounded-lg">
+    <div class="flex items-center justify-center gap-16 mb-8">
+      <div class="flex">
+        <label for="month" class="p-2 mr-4 text-lg">Month:</label>
         <select id="month" v-model="selectedMonth" @change="updateCalendar" class="p-2 text-lg border rounded">
           <option v-for="(month, index) in months" :key="index" :value="index">{{ month }}</option>
         </select>
       </div>
-      <div class="flex ml-8 space-x-4">
-        <label for="year" class="mr-4 text-lg">Year:</label>
+      <div class="flex ml-8">
+        <label for="year" class="p-2 mr-4 text-lg">Year:</label>
         <select id="year" v-model="selectedYear" @change="updateCalendar" class="p-2 text-lg border rounded">
           <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
         </select>
       </div>
     </div>
-    <table class="w-full text-lg border border-collapse border-gray-300">
+    <table class="w-full text-lg text-center border border-collapse border-gray-300">
       <thead>
         <tr>
           <th class="p-4 border border-gray-300">Sun</th>
@@ -90,10 +107,14 @@ onMounted(() => {
       </thead>
       <tbody>
         <tr v-for="week in calendar" :key="week[0].date">
-          <td v-for="day in week" :key="day.date" class="relative p-4 border border-gray-300">
-            <div @click="openAddingList(day)" class="cursor-pointer">
-              <span :class="{'bg-pink-600': isToday(day.date)}">{{ day.date ? day.date.getDate() : '' }}</span> <!--responsible for showing the date-->
-              <!-- <div v-if="day.notes" class="marquee">{{ day.notes }}</div> -->
+          <td v-for="day in week" :key="day.date" :class="{
+            'bg-green-200': isSelected(day.date),
+            'relative p-4 border border-gray-300 calendar-cell': true
+          }">
+            <div @click="openAddingList(day)" class="flex items-center justify-center w-full h-full cursor-pointer">
+              <span :class="{'bg-green-600 rounded-full text-white p-2 flex items-center justify-center w-10 h-10': isToday(day.date)}">
+                {{ day.date ? day.date.getDate() : '' }}
+              </span>
             </div>
           </td>
         </tr>
@@ -101,28 +122,33 @@ onMounted(() => {
     </table>
   </div>
 </template>
-
 <style scoped>
-  textarea {
-    resize: none;
+textarea {
+  resize: none;
+}
+.marquee {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  height: 1.5em; /* Set a fixed height */
+}
+.marquee:hover {
+  animation: scroll-left 10s linear infinite;
+}
+@keyframes scroll-left {
+  from {
+    transform: translateX(100%);
   }
-  .marquee {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
-
-    height: 1.5em; /* Set a fixed height */
+  to {
+    transform: translateX(-100%);
   }
-  .marquee:hover {
-    animation: scroll-left 10s linear infinite;
-  }
-  @keyframes scroll-left {
-    from {
-      transform: translateX(100%);
-    }
-    to {
-      transform: translateX(-100%);
-    }
-  }
+}
+.bg-green-200 {
+  background-color: #c6f6d5; /* Light green background */
+}
+.calendar-cell {
+  width: 100px; /* Fixed width for calendar cells */
+  height: 100px; /* Fixed height for calendar cells */
+}
 </style>

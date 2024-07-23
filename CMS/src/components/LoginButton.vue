@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col items-center justify-center">
-    <button class="py-1 text-4xl px-10 rounded-3xl bg-[#D3CAE7]">
+    <button class="py-1 text-6xl px-10 rounded-3xl bg-[#D3CAE7]">
     <h1 class="text-white">Login</h1>
     </button>
     <!-- <br>
