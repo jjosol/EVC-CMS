@@ -74,7 +74,7 @@ watch(() => props.currentDay, (newVal) => {
 // About people modal
 const openEditModal = (person) => {
   selectedPerson.value = { ...person };
-  selectedTime.value = formatAMPM(new Date());
+  selectedTime.value = formatAMPM(new Date(person.addedAt));
   showEditModal.value = true;
 };
 
@@ -83,6 +83,7 @@ const addPerson = (person) => {
   const now = new Date();
   if (person.name && person.section) {
     selectedPerson.value = { ...person, addedAt: now, medicines: [] };
+    selectedTime.value = formatAMPM(now);
     showEditModal.value = true;
   }
 };
@@ -106,6 +107,8 @@ const formatAMPM = (date) => {
 
 // Save person
 const savePerson = () => {
+  const now = new Date();
+  selectedPerson.value.addedAt = now; // Update addedAt to the current time
   const index = people.value.findIndex(p => p.name === selectedPerson.value.name);
   if (index !== -1) {
     people.value[index] = { ...selectedPerson.value };
@@ -115,6 +118,7 @@ const savePerson = () => {
   showEditModal.value = false;
   showAddModal.value = false;
 };
+
 
 // Cancel edit
 const cancelEdit = () => {
@@ -151,6 +155,7 @@ const saveMedicineDetails = () => {
     selectedPerson.value.medicines.push({ ...selectedMedicine.value });
   }
   showMedicineDetailModal.value = false;
+  showMedicineModal.value = true;
 };
 
 // Remove medicine
@@ -166,6 +171,7 @@ const cancelMedicine = () => {
 // Cancel medicine details
 const cancelMedicineDetails = () => {
   showMedicineDetailModal.value = false;
+  showMedicineModal.value = true;
 };
 
 // Selected medicine for detail modal
@@ -187,6 +193,7 @@ watch(
     }
   }
 );
+
 </script>
 
 <template>
@@ -197,7 +204,7 @@ watch(
       <ul class="mt-4 overflow-y-auto max-h-60">
         <li v-for="(person, index) in people" :key="index" class="flex items-center justify-between mb-2 text-lg confinement-item">
           <span @click="openEditModal(person)" class="cursor-pointer confinement-details">{{ person.name }} - {{ person.section }} - {{ formatAMPM(person.addedAt) }}</span>
-          <button @click="deletePerson(index)" class="p-2 text-white bg-red-500 rounded">Delete</button>
+          <button @click="deletePerson(index)" class="p-2 text-white bg-red-500 rounded">-</button>
         </li>
       </ul>
       <button @click="showAddModal = true" class="p-2 mt-4 text-white bg-blue-500 rounded">+</button>
@@ -211,7 +218,7 @@ watch(
         <ul class="mt-4 overflow-y-auto max-h-60">
           <li v-for="person in filteredPeople" :key="person.name" class="flex items-center justify-between mb-2 text-lg">
             <span>{{ person.name }} - {{ person.section }}</span>
-            <button @click="addPerson(person)" class="p-2 text-white bg-green-500 rounded">Add</button>
+            <button @click="addPerson(person)" class="p-2 text-white bg-green-500 rounded">+</button>
           </li>
         </ul>
         <div class="flex justify-end mt-4">
@@ -246,7 +253,7 @@ watch(
           <ul class="mt-4">
             <li v-for="(medicine, index) in selectedPerson.medicines" :key="index" class="flex items-center justify-between mb-2">
               <span @click="editMedicine(medicine, index)" class="cursor-pointer">{{ medicine.name }} - {{ medicine.dosage }} mg - {{ medicine.quantity }} pcs - {{ medicine.schedule }}</span>
-              <button @click="removeMedicine(index)" class="p-2 text-white bg-red-500 rounded">Remove</button>
+              <button @click="removeMedicine(index)" class="p-2 text-white bg-red-500 rounded">-</button>
             </li>
           </ul>
           <button v-if="selectedPerson.medicationAdministration" @click="openMedicineModal" class="p-2 mt-4 text-white bg-blue-500 rounded">Add Medicine</button>
@@ -266,7 +273,7 @@ watch(
         <ul class="mt-4 overflow-y-auto max-h-60">
           <li v-for="medicine in filteredMedicines" :key="medicine.name" class="flex items-center justify-between mb-2 text-lg">
             <span>{{ medicine.name }}</span>
-            <button @click="addMedicine(medicine)" class="p-2 text-white bg-green-500 rounded">Add</button>
+            <button @click="addMedicine(medicine)" class="p-2 text-white bg-green-500 rounded">+</button>
           </li>
         </ul>
         <div class="flex justify-end mt-4">

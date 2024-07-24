@@ -112,7 +112,9 @@ Copy code
             'relative p-4 border border-gray-300 calendar-cell': true
           }">
             <div @click="openAddingList(day)" class="flex items-center justify-center w-full h-full cursor-pointer">
-              <span :class="{'bg-green-600 rounded-full text-white p-2 flex items-center justify-center w-10 h-10': isToday(day.date)}">
+              <span :class="{
+                'bg-green-600 rounded-full text-white p-2 flex items-center justify-center w-10 h-10': isToday(day.date)
+              }">
                 {{ day.date ? day.date.getDate() : '' }}
               </span>
             </div>
@@ -148,7 +150,7 @@ textarea {
   background-color: #c6f6d5; /* Light green background */
 }
 .calendar-cell {
-  width: 100px; /* Fixed width for calendar cells */
-  height: 100px; /* Fixed height for calendar cells */
+  width: 75px; /* Fixed width for calendar cells */
+  height: 75px; /* Fixed height for calendar cells */
 }
 </style>
