@@ -12,12 +12,15 @@
   };
   </script>
 
-  <template>
-  <NavBar/>
-    <div class="flex items-center justify-center min-h-screen">
-      <div class="flex w-full max-w-6xl">
-        <Calendar @day-selected="handleDaySelected" /> 
+<template>
+  <div class="flex flex-col min-h-screen">
+    <NavBar />
+    <div class="flex items-center justify-center flex-grow">
+      <div class="flex w-full max-w-6xl space-x-4">
+        <Calendar @day-selected="handleDaySelected" />
         <AddList :current-day="currentDay" />
       </div>
     </div>
-  </template>
+  </div>
+</template>
+
